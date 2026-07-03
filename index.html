@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Sistem Pemantauan Tambak Udang Berbasis IoT dan AI">
+    <meta name="theme-color" content="#003366">
+    <title>TambakTech Enterprise</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* =======================================================
+           1. CSS LOGIN (OVERLAY FULLSCREEN)
+           ======================================================= */
+        #loginWrapper { background: linear-gradient(135deg, #003366 0%, #0055a5 100%); position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; overflow: hidden; z-index: 999999; transition: opacity 0.5s ease; }
+        #loginWrapper .wave { position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg"><path fill="rgba(255,255,255,0.3)" d="M0,160L48,170.7C96,181,192,203,288,192C384,181,480,139,576,138.7C672,139,768,181,864,197.3C960,213,1056,203,1152,176C1248,149,1344,107,1392,85.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') repeat-x; background-size: 1440px 100px; animation: wave 10s linear infinite; }
+        @keyframes wave { 0% { background-position-x: 0; } 100% { background-position-x: 1440px; } }
+        #loginWrapper .login-glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 25px; padding: 40px 30px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); width: 90%; max-width: 420px; z-index: 10; animation: fadeInUp 0.8s ease-out; position: relative; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        #loginWrapper .form-control { border-radius: 12px; padding: 12px 15px; border: 1px solid #e0e0e0; background-color: #f8f9fa; font-weight: 600; }
+        #loginWrapper .form-control:focus { box-shadow: 0 0 0 3px rgba(0,85,165,0.2); border-color: #0055a5; }
+        #loginWrapper .btn-primary { border-radius: 12px; padding: 12px; font-weight: bold; background: #003366; border: none; transition: 0.3s; }
+        #loginWrapper .btn-primary:hover { background: #002244; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,51,102,0.4); }
+        #loginWrapper .btn-success { border-radius: 12px; padding: 12px; font-weight: bold; background: #28a745; border: none; transition: 0.3s; }
+        #loginWrapper .btn-success:hover { background: #218838; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(40,167,69,0.4); }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
+        #loginWrapper .toggle-link { color: #0055a5; cursor: pointer; font-weight: bold; text-decoration: none; transition: 0.2s; }
+        #loginWrapper .toggle-link:hover { color: #003366; text-decoration: underline; }
+        #registerSection, #paymentSection { display: none; }
+        #loginWrapper .pay-method { border: 1px solid #e0e0e0; border-radius: 12px; padding: 15px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; background: #f8f9fa; }
+        #loginWrapper .pay-method:hover { border-color: #0055a5; background: #ffffff; }
+
+        /* =======================================================
+           2. CSS DASHBOARD UTAMA
+           ======================================================= */
+        :root {
+            --primary-color: #003366;
+            --secondary-color: #0055a5;
+            --accent-color: #2c5364;
+            --bg-color: #f0f4f8;
+            --text-dark: #2d3748;
+            --text-muted: #718096;
+            --danger-color: #e53e3e;
+            --success-color: #38a169;
+            --warning-color: #d69e2e;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            background-color: var(--bg-color); color: var(--text-dark); 
+            overflow-x: hidden; -webkit-font-smoothing: antialiased; margin: 0; padding: 0;
+        }
+        
+        #dashboardWrapper { display: none; opacity: 0; transition: opacity 0.5s ease; padding-bottom: 110px; padding-top: 140px; }
+
+        .topbar { background-image: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 50%, var(--accent-color) 100%); background-color: var(--primary-color); color: #ffffff; padding-top: 30px; padding-right: 20px; padding-bottom: 30px; padding-left: 20px; border-bottom-left-radius: 35px; border-bottom-right-radius: 35px; box-shadow: 0px 10px 30px rgba(0, 51, 102, 0.25); position: fixed; top: 0px; left: 0px; right: 0px; width: 100%; height: 115px; z-index: 1000; }
+        .logo-container { position: relative; display: inline-block; }
+        .logo-img { width: 55px; height: 55px; border-radius: 16px; background-color: rgba(255, 255, 255, 0.15); padding: 5px; object-fit: cover; border: 2px solid rgba(255, 255, 255, 0.3); transition: transform 0.3s ease; }
+        .logo-img:hover { transform: rotate(5deg) scale(1.05); }
+
+        .card-expert { border-style: none; border-radius: 24px; box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.04); background-color: #ffffff; transition: transform 0.25s ease, box-shadow 0.25s ease; margin-bottom: 24px; overflow: hidden; }
+        .card-expert:hover { box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.08); }
+        .menu-card { cursor: pointer; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 10px !important; }
+        .menu-card:active { transform: scale(0.94); }
+        .icon-box { width: 60px; height: 60px; display: inline-flex; align-items: center; justify-content: center; border-radius: 18px; margin-bottom: 16px; transition: all 0.3s ease; }
+        .menu-card:hover .icon-box { transform: translateY(-5px); }
+
+        .fixed-sub-header { position: fixed; top: 105px; left: 0px; right: 0px; z-index: 900; background-color: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); box-shadow: 0px 4px 15px rgba(0,0,0,0.04); padding: 15px 20px; display: flex; align-items: center; border-bottom: 1px solid #e2e8f0; }
+        .header-spacer { height: 70px; width: 100%; display: block; }
+        .back-btn-premium { width: 42px; height: 42px; border-radius: 50%; background-color: #f8fafc; display: flex; align-items: center; justify-content: center; box-shadow: 0px 4px 10px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); margin-right: 15px; }
+        .back-btn-premium:hover { transform: translateY(-2px); box-shadow: 0px 6px 15px rgba(0,85,165,0.15); border-color: var(--secondary-color); }
+        .back-btn-premium:active { transform: scale(0.9); box-shadow: 0px 2px 5px rgba(0,0,0,0.04); }
+        
+        .view-section { display: none; padding: 0 20px; animation: fadeInOpacityOnly 0.4s ease-in forwards; position: relative; z-index: 20; }
+        #homeView { margin-top: -30px; }
+        .view-section.active { display: block; }
+        @keyframes fadeInOpacityOnly { 0% { opacity: 0; } 100% { opacity: 1; } }
+        
+        .chart-wrapper { position: relative; height: 280px; width: 100%; margin: 15px 0; }
+        
+        .bottom-nav { position: fixed; bottom: 0px; left: 0px; right: 0px; height: 75px; background-color: rgba(255, 255, 255, 0.98); backdrop-filter: blur(20px); box-shadow: 0px -10px 40px rgba(0, 0, 0, 0.08); display: flex; justify-content: space-around; padding: 10px 10px 15px 10px; z-index: 1000; border-top-left-radius: 35px; border-top-right-radius: 35px; }
+        .nav-item { text-align: center; color: var(--text-muted); font-size: 0.75rem; text-decoration: none; cursor: pointer; flex: 1; position: relative; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .nav-item i { font-size: 1.7rem; display: block; margin-bottom: 2px; transition: transform 0.3s ease; }
+        .nav-item.active { color: var(--secondary-color); font-weight: 900; }
+        .nav-item.active i { transform: translateY(-6px) scale(1.15); color: var(--primary-color); }
+        
+        .notif-badge { position: absolute; top: -6px; right: 20%; background-color: var(--danger-color); color: #ffffff; font-size: 0.65rem; font-weight: 900; width: 20px; height: 20px; border-radius: 50%; display: none; align-items: center; justify-content: center; border: 2px solid #ffffff; box-shadow: 0px 4px 8px rgba(229, 62, 62, 0.4); animation: pulseAlert 2s infinite; }
+        @keyframes pulseAlert { 0% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(229, 62, 62, 0); } 100% { box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); } }
+        
+        .chat-container { height: calc(100vh - 420px); overflow-y: auto; padding: 10px 15px 50px 15px; background-color: #f8fafc; border-radius: 20px; border: 1px solid #e2e8f0; }
+        .chat-bubble { padding: 15px 22px; border-radius: 22px; margin-bottom: 18px; max-width: 88%; font-size: 0.95rem; line-height: 1.6; clear: both; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.04); word-wrap: break-word; }
+        .chat-bot { background-color: #ffffff; color: var(--text-dark); border-bottom-left-radius: 4px; float: left; border: 1px solid #e2e8f0; }
+        .chat-user { background-color: var(--secondary-color); color: #ffffff; border-bottom-right-radius: 4px; float: right; }
+        .chip-scroll { display: flex; overflow-x: auto; gap: 12px; padding: 5px 0; }
+        .chip-scroll::-webkit-scrollbar { display: none; }
+        .chat-chip { white-space: nowrap; background-color: #edf2f7; color: var(--accent-color); border: 1px solid #cbd5e0; padding: 8px 18px; border-radius: 25px; font-size: 0.85rem; cursor: pointer; font-weight: 600; transition: all 0.2s ease; }
+        .chat-chip:hover { background-color: #e2e8f0; transform: translateY(-2px); }
+
+        .chat-input-wrapper { position: fixed; bottom: 75px; left: 0px; right: 0px; background-color: #ffffff; border-top: 1px solid #e2e8f0; padding: 10px 15px 15px 15px; z-index: 50; box-shadow: 0px -5px 15px rgba(0,0,0,0.03); border-radius: 25px 25px 0 0; }
+        
+        .typing-indicator { display: none; padding: 15px 22px; background-color: #ffffff; border-radius: 22px 22px 22px 4px; float: left; clear: both; margin-bottom: 18px; border: 1px solid #e2e8f0; }
+        .dot { display: inline-block; width: 8px; height: 8px; background-color: var(--secondary-color); border-radius: 50%; margin: 0 3px; animation: typingBounce 1.4s infinite ease-in-out both; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typingBounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        .admin-toast { position: fixed; top: -150px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 450px; z-index: 100000 !important; transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .admin-toast.show { top: 25px !important; }
+        
+        .profile-img-wrapper { position: relative; display: inline-block; cursor: pointer; margin-bottom: 15px; }
+        .profile-img-wrapper img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid var(--secondary-color); box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.15); background-color: #ffffff; }
+        .profile-img-overlay { position: absolute; bottom: 5px; right: 5px; background-color: var(--secondary-color); color: #ffffff; width: 38px; height: 38px; border-radius: 50%; display: none; align-items: center; justify-content: center; border: 3px solid #ffffff; transition: all 0.3s ease; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2); }
+        .profile-img-wrapper:hover .profile-img-overlay { transform: scale(1.15) rotate(10deg); background-color: var(--primary-color); }
+
+        .form-floating > .form-control, .form-floating > .form-select { border-radius: 16px; border: 1px solid #e2e8f0; background-color: #f8fafc; font-weight: 600; color: var(--text-dark); }
+        .form-floating > .form-control:focus, .form-floating > .form-select:focus { border-color: var(--secondary-color); box-shadow: 0px 0px 0px 4px rgba(0, 85, 165, 0.15); }
+        .form-control:disabled, .form-select:disabled { background-color: #edf2f7; opacity: 1; color: var(--text-muted); }
+        
+        .connection-status { background-color: rgba(56, 161, 105, 0.1); color: var(--success-color); padding: 8px 15px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; display: inline-flex; align-items: center; margin-bottom: 10px; border: 1px solid rgba(56, 161, 105, 0.2); }
+        .read-hint { display: inline-block; margin-top: 10px; font-size: 0.8rem; color: var(--secondary-color); font-weight: 600; animation: pulseHint 2s infinite; }
+        @keyframes pulseHint { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+    </style>
+</head>
+<body>
+
+<!-- ========================================================
+     BAGIAN 1: LAYAR LOGIN
+======================================================== -->
+<div id="loginWrapper">
+    <div class="wave"></div>
+    <div class="login-glass">
+        <div class="text-center mb-4">
+            <img src="logo.png" alt="TambakTech" style="width: 75px; margin-bottom: 10px; animation: float 3s ease-in-out infinite; border-radius:15px; border: 2px solid #0055a5; padding:3px;" onerror="this.outerHTML='<i class=\'bi bi-droplet-half text-primary\' style=\'font-size: 3.5rem; animation: float 3s ease-in-out infinite; display:inline-block;\'></i>'">
+            <h3 class="fw-bold text-dark m-0">TambakTech</h3>
+            <small class="text-muted fw-bold" style="letter-spacing: 1px;">SISTEM PAKAR AKUAKULTUR</small>
+        </div>
+
+        <div id="statusAlert" class="alert alert-danger d-none rounded-3 small py-2 text-center fw-bold" role="alert"></div>
+
+        <div id="loginSection">
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold text-muted">ID Pengguna</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-person text-muted"></i></span>
+                        <input type="text" class="form-control border-start-0" id="loginUser" placeholder="nafrirehanata" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label small fw-bold text-muted">Kata Sandi</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="bi bi-shield-lock text-muted"></i></span>
+                        <input type="password" class="form-control border-start-0 border-end-0" id="loginPass" placeholder="••••••••" required>
+                        <span class="input-group-text bg-light border-start-0 rounded-end-3" style="cursor: pointer;" onclick="togglePassword('loginPass', this)">
+                            <i class="bi bi-eye-slash text-muted"></i>
+                        </span>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-3" id="btnLogin">Masuk ke Dashboard</button>
+                <div class="text-center small text-muted">
+                    Pengguna baru? <span class="toggle-link" onclick="toggleAuthView('registerSection')">Daftar Akun Baru</span>
+                </div>
+            </form>
+        </div>
+
+        <div id="registerSection">
+            <h6 class="fw-bold text-center mb-3 border-bottom pb-2">Registrasi Pelanggan Baru</h6>
+            <form id="registerForm">
+                <div class="mb-2"><input type="text" class="form-control" id="regName" placeholder="Nama Lengkap" required></div>
+                <div class="mb-2"><input type="text" class="form-control" id="regUser" placeholder="Buat ID Pengguna" required></div>
+                <div class="mb-2"><input type="tel" class="form-control" id="regPhone" placeholder="No. WhatsApp" required></div>
+                <div class="mb-3"><input type="password" class="form-control" id="regPass" placeholder="Buat Kata Sandi" required></div>
+                <div class="alert alert-warning small p-2 text-center border-warning border-opacity-50">
+                    <i class="bi bi-info-circle-fill me-1"></i> Pendaftaran mewajibkan pembelian 1 unit Node Sensor IoT (Hardware) + Langganan AI.
+                </div>
+                <button type="submit" class="btn btn-success w-100 mb-3">Lanjutkan ke Pembayaran</button>
+                <div class="text-center small text-muted">Sudah berlangganan? <span class="toggle-link" onclick="toggleAuthView('loginSection')">Masuk di sini</span></div>
+            </form>
+        </div>
+
+        <div id="paymentSection">
+            <h6 class="fw-bold text-center mb-2">Checkout Infrastruktur</h6>
+            <div class="bg-light p-3 rounded-3 mb-3 border">
+                <div class="d-flex justify-content-between small mb-1"><span class="text-muted">1x Sensor IoT Fisik (ESP32)</span><strong class="text-dark">Rp 1.500.000</strong></div>
+                <div class="d-flex justify-content-between small mb-2 border-bottom pb-2"><span class="text-muted">1x Langganan AI (Bulan ke-1)</span><strong class="text-dark">Rp 150.000</strong></div>
+                <div class="d-flex justify-content-between"><span class="fw-bold text-primary">Total Tagihan</span><h5 class="fw-black text-danger m-0">Rp 1.650.000</h5></div>
+            </div>
+            
+            <label class="pay-method d-flex align-items-center w-100">
+                <input type="radio" name="pay_onboard" checked class="form-check-input mt-0 me-3" style="transform: scale(1.3);">
+                <div class="flex-grow-1 fw-bold text-dark">QRIS (Gopay/OVO/Dana)</div>
+            </label>
+            <label class="pay-method d-flex align-items-center w-100">
+                <input type="radio" name="pay_onboard" class="form-check-input mt-0 me-3" style="transform: scale(1.3);">
+                <div class="flex-grow-1 fw-bold text-dark">Transfer Bank / Virtual Account</div>
+            </label>
+            
+            <button class="btn btn-success w-100 mb-2 mt-2" id="btnPayAndStart" onclick="processOnboardingPayment()">Bayar & Buat Akun</button>
+            <button class="btn btn-light w-100 text-muted fw-bold border" onclick="toggleAuthView('registerSection')">Kembali</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================
+     BAGIAN 2: LAYAR DASHBOARD
+======================================================== -->
+<div id="dashboardWrapper">
+    <div id="adminToast" class="admin-toast" onclick="AppController.closeToast(); AppController.switchTab('notifView', 'nav-notif');">
+        <div class="shadow-lg" style="background-color: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px); border-radius: 18px; padding: 16px; border: 1px solid rgba(0,0,0,0.08);">
+            <div class="d-flex align-items-center mb-2">
+                <img src="logo.png" style="width: 20px; height: 20px; border-radius: 4px; margin-right: 8px;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+                <strong class="text-dark me-auto" style="font-size: 0.8rem;">TambakTech System</strong>
+                <small class="text-muted" style="font-size: 0.7rem;">Baru saja</small>
+            </div>
+            <h6 class="fw-bold text-dark m-0 mb-1" id="toastTitle" style="font-size: 0.95rem;">🚨 Peringatan Uji Coba (Demo)</h6>
+            <p class="m-0 text-muted" id="toastMessage" style="font-size: 0.85rem; line-height: 1.3;">Ketuk untuk melihat log di aplikasi!</p>
+        </div>
+    </div>
+
+    <header class="topbar">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="m-0 fw-bold" style="letter-spacing: 0.5px;">TambakTech</h3>
+                <small id="syncStatus" class="text-white-50 fw-bold">
+                    <i class="bi bi-cloud-check-fill text-info me-1"></i> Server Tersinkronisasi
+                </small>
+            </div>
+            <div class="logo-container">
+                <img src="logo.png" id="topbarLogo" class="logo-img" alt="Logo Perusahaan" onerror="this.outerHTML='<i class=\'bi bi-buildings-fill fs-1 text-white\'></i>'">
+            </div>
+        </div>
+    </header>
+
+    <main id="homeView" class="view-section active">
+        <div class="card card-expert p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted fw-bold text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Sistem Pakar Akuakultur</small>
+                    <h4 class="fw-bold m-0 mt-1 text-dark" id="homeName">Moh. Nafri Rehanata</h4>
+                </div>
+                <div class="text-end bg-light px-3 py-2 rounded-4 border border-light shadow-sm">
+                    <h4 class="fw-bold m-0" style="color: var(--accent-color);" id="weatherTemp">
+                        <span class="spinner-border spinner-border-sm"></span>
+                    </h4>
+                    <small class="text-muted fw-bold" style="font-size: 0.7rem;" id="weatherDesc">Sinkronisasi BMKG...</small>
+                </div>
+            </div>
+            <hr class="my-4 opacity-10">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <small class="text-muted fw-bold d-block mb-1">Water Quality Index (WQI)</small>
+                    <h2 class="fw-black text-success m-0" style="font-weight: 900;" id="wqiValue"><span class="spinner-border spinner-border-sm text-success"></span></h2>
+                </div>
+                <div>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success px-4 py-2 rounded-pill shadow-sm fw-bold" id="wqiStatus">
+                        Kalkulasi...
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="fw-bold text-secondary mb-3 ms-2" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1.5px;">Modul Operasional</h6>
+        <div class="row g-3">
+            <div class="col-6">
+                <div class="card card-expert menu-card shadow-sm" onclick="AppController.switchTab('liveView', 'nav-home')">
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary"><i class="bi bi-activity fs-2"></i></div>
+                    <h6 class="fw-bold mb-1">Pantau Live</h6>
+                    <small class="text-muted text-center" style="font-size: 0.7rem; line-height: 1.3;">Pemantauan Kualitas Air Multi-Kolam</small>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card card-expert menu-card shadow-sm" onclick="AppController.switchTab('forecastView', 'nav-home')">
+                    <div class="icon-box bg-danger bg-opacity-10 text-danger"><i class="bi bi-cpu-fill fs-2"></i></div>
+                    <h6 class="fw-bold mb-1">Prediksi AI</h6>
+                    <small class="text-muted text-center" style="font-size: 0.7rem; line-height: 1.3;">Pemodelan Statistika (Forecasting)</small>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card card-expert menu-card shadow-sm" onclick="AppController.switchTab('pondView', 'nav-home')">
+                    <div class="icon-box bg-success bg-opacity-10 text-success"><i class="bi bi-grid-1x2-fill fs-2"></i></div>
+                    <h6 class="fw-bold mb-1">Aset IoT</h6>
+                    <small class="text-muted text-center" style="font-size: 0.7rem; line-height: 1.3;">Manajemen Node & IP Address Sensor</small>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card card-expert menu-card shadow-sm" onclick="alert('Modul Generator PDF sedang memproses big data kualitas air bulan ini. Silakan tunggu update versi 1.2.')">
+                    <div class="icon-box bg-warning bg-opacity-10 text-warning" style="color: #d97706 !important;"><i class="bi bi-file-earmark-pdf-fill fs-2"></i></div>
+                    <h6 class="fw-bold mb-1">Laporan</h6>
+                    <small class="text-muted text-center" style="font-size: 0.7rem; line-height: 1.3;">Otomatisasi Export File PDF & CSV</small>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card card-expert menu-card shadow-sm" onclick="alert('Fitur Manajemen Pakan Harian (Feeding Log) akan segera hadir di Update TambakTech V2.0!')">
+                    <div class="icon-box bg-info bg-opacity-10 text-info"><i class="bi bi-box-seam-fill fs-2"></i></div>
+                    <h6 class="fw-bold mb-1">Log Pakan</h6>
+                    <small class="text-muted text-center" style="font-size: 0.7rem; line-height: 1.3;">Pencatatan Harian Konsumsi Pakan</small>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="card card-expert menu-card shadow-sm" onclick="alert('Kalkulator Rasio Konversi Pakan (Feed Conversion Ratio) sedang dalam tahap beta testing oleh tim Statistika.')">
+                    <div class="icon-box bg-secondary bg-opacity-10 text-secondary"><i class="bi bi-calculator-fill fs-2"></i></div>
+                    <h6 class="fw-bold mb-1">Hitung FCR</h6>
+                    <small class="text-muted text-center" style="font-size: 0.7rem; line-height: 1.3;">Estimasi Rasio Pakan terhadap Panen</small>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <main id="liveView" class="view-section">
+        <div class="fixed-sub-header">
+            <button class="back-btn-premium m-0" onclick="AppController.switchTab('homeView', 'nav-home')"><i class="bi bi-arrow-left fs-4 text-primary"></i></button>
+            <h4 class="fw-bold m-0 flex-grow-1" style="color: var(--accent-color); margin-left: 10px !important;">Live Monitoring</h4>
+            <span class="badge bg-success rounded-pill px-3 py-2 shadow-sm fw-bold border border-success border-opacity-25"><i class="bi bi-wifi me-1"></i> Online</span>
+        </div>
+        <div class="header-spacer"></div>
+        
+        <div class="form-floating mb-4 shadow-sm rounded-4">
+            <select class="form-select border-0 fw-bold" style="color: var(--accent-color); font-size: 1.1rem; height: 65px; padding-top: 25px;" id="selectPondLive" onchange="IoTController.changeActivePond(this.value)">
+                <option value="Alpha" selected>📍 Kolam Alpha (Udang Vaname)</option>
+                <option value="Beta">📍 Kolam Beta (Udang Windu)</option>
+            </select>
+            <label class="fw-bold text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Pilih Jaringan Sensor IoT</label>
+        </div>
+
+        <div class="connection-status shadow-sm mb-4" id="liveConnectionStatus">
+            <i class="bi bi-link-45deg fs-6 me-1"></i> Node ESP32 Terhubung Stabil ke Kolam Alpha
+        </div>
+
+        <div class="card card-expert p-4 mb-4">
+            <div class="d-flex justify-content-between mb-2">
+                <h6 class="fw-bold text-muted m-0">Kadar Oksigen Terlarut (DO)</h6>
+                <span class="badge bg-primary bg-opacity-10 text-primary">Real-time</span>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="liveChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="row text-center bg-white p-4 rounded-4 shadow-sm border-0 mb-5 mx-0">
+            <div class="col-4 border-end">
+                <div class="icon-box bg-primary bg-opacity-10 text-primary mx-auto mb-2" style="width: 40px; height: 40px;"><i class="bi bi-droplet-fill"></i></div>
+                <small class="text-muted fw-bold d-block mb-1">Oksigen</small>
+                <strong class="fs-3 text-primary d-block lh-1" id="valDO">5.5</strong>
+                <small class="text-muted" style="font-size: 0.7rem;">mg/L</small>
+            </div>
+            <div class="col-4 border-end">
+                <div class="icon-box bg-warning bg-opacity-10 text-warning mx-auto mb-2" style="width: 40px; height: 40px; color: #d97706 !important;"><i class="bi bi-thermometer-half"></i></div>
+                <small class="text-muted fw-bold d-block mb-1">Suhu</small>
+                <strong class="fs-3 text-warning d-block lh-1" style="color: #d97706 !important;" id="valTemp">29.1</strong>
+                <small class="text-muted" style="font-size: 0.7rem;">°C</small>
+            </div>
+            <div class="col-4">
+                <div class="icon-box bg-success bg-opacity-10 text-success mx-auto mb-2" style="width: 40px; height: 40px;"><i class="bi bi-water"></i></div>
+                <small class="text-muted fw-bold d-block mb-1">pH Air</small>
+                <strong class="fs-3 text-success d-block lh-1" id="valPH">7.8</strong>
+                <small class="text-muted" style="font-size: 0.7rem;">Skala</small>
+            </div>
+        </div>
+    </main>
+
+    <main id="forecastView" class="view-section">
+        <div class="fixed-sub-header">
+            <button class="back-btn-premium m-0" onclick="AppController.switchTab('homeView', 'nav-home')"><i class="bi bi-arrow-left fs-4 text-primary"></i></button>
+            <h4 class="fw-bold m-0 text-danger flex-grow-1" style="margin-left: 10px !important;"><i class="bi bi-cpu-fill me-2"></i>Prediksi AI</h4>
+        </div>
+        <div class="header-spacer"></div>
+        
+        <div class="form-floating mb-4 shadow-sm rounded-4">
+            <select class="form-select border-0 fw-bold text-danger" style="font-size: 1.1rem; height: 65px; padding-top: 25px;" id="selectPondForecast" onchange="document.getElementById('selectPondLive').value = this.value; IoTController.changeActivePond(this.value);">
+                <option value="Alpha" selected>Target Analisis: Kolam Alpha</option>
+                <option value="Beta">Target Analisis: Kolam Beta</option>
+            </select>
+            <label class="fw-bold text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 1px;">Pemrosesan Data Historis</label>
+        </div>
+        
+        <div class="connection-status shadow-sm mb-4" id="forecastConnectionStatus" style="background-color: rgba(229, 62, 62, 0.1); color: var(--danger-color); border-color: rgba(229, 62, 62, 0.2);">
+            <i class="bi bi-database-check fs-6 me-1"></i> Model AI sinkron dengan Database Historis Kolam Alpha
+        </div>
+
+        <div class="card card-expert p-4 mb-5 border-top border-danger border-5">
+            <p class="small text-muted mb-4 lh-lg">Sistem menggunakan arsitektur pemodelan <b>Long Short-Term Memory (LSTM) Neural Network</b> sejati untuk memproses deret waktu historis. Lapisan memori menangkap ritme biologis harian (*seasonality*) seperti fotosintesis dan respirasi.</p>
+            
+            <button id="btnPredict" class="btn btn-danger w-100 fw-bold py-3 mb-4 shadow-sm rounded-pill" onclick="MachineLearningCore.executeRealForecastModel()">
+                <i class="bi bi-play-circle-fill me-2 fs-5"></i> Mulai Komputasi LSTM Inference
+            </button>
+            
+            <div class="d-flex justify-content-between mb-2"><small class="fw-bold text-muted" id="thresholdLabelText">Proyeksi Garis Merah (Threshold: 3.0 mg/L)</small></div>
+            <div class="chart-wrapper"><canvas id="forecastChart"></canvas></div>
+            
+            <div id="predictionStatusPanel" class="mt-4 p-3 rounded-3" style="display:none; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-clipboard-data-fill me-2 text-primary"></i>Kesimpulan Algoritma Expert</h6>
+                <p id="predictionStatusText" class="small text-muted m-0 lh-base"></p>
+            </div>
+        </div>
+    </main>
+
+    <main id="pondView" class="view-section">
+        <div class="fixed-sub-header">
+            <button class="back-btn-premium m-0" onclick="AppController.switchTab('homeView', 'nav-home')"><i class="bi bi-arrow-left fs-4 text-primary"></i></button>
+            <h4 class="fw-bold m-0 flex-grow-1" style="color: var(--accent-color); margin-left: 10px !important;">Infrastruktur IoT</h4>
+        </div>
+        <div class="header-spacer"></div>
+        
+        <button class="btn btn-primary w-100 rounded-pill fw-bold py-3 mb-5 shadow-sm" style="background: var(--accent-color); border:none;" data-bs-toggle="modal" data-bs-target="#paywallModal">
+            <i class="bi bi-cart-plus-fill me-2 fs-5"></i> Beli & Integrasi Sensor Baru
+        </button>
+        
+        <h6 class="fw-bold text-muted text-uppercase mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">Daftar Lisensi Aktif</h6>
+        
+        <div id="pondListContainer">
+            <div class="card card-expert mb-3 p-3 border-start border-success border-5">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h5 class="fw-bold m-0 text-dark mb-1">Kolam Alpha</h5>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-1"><i class="bi bi-wifi fs-6 me-1"></i> Sinyal Kuat</span>
+                    </div>
+                    <div class="p-2 bg-light rounded-3 text-center"><i class="bi bi-router-fill fs-4 text-primary"></i></div>
+                </div>
+                <hr class="opacity-10 my-2">
+                <div class="row mt-2">
+                    <div class="col-6"><small class="text-muted">Alamat IP Lokal</small><br><strong class="small">192.168.1.14</strong></div>
+                    <div class="col-6"><small class="text-muted">Target Komoditas</small><br><strong class="small">Udang Vaname</strong></div>
+                </div>
+            </div>
+            
+            <div class="card card-expert mb-3 p-3 border-start border-warning border-5">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h5 class="fw-bold m-0 text-dark mb-1">Kolam Beta</h5>
+                        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning rounded-pill px-3 py-1" style="color: #d97706 !important; border-color: #d97706 !important;"><i class="bi bi-wifi-2 fs-6 me-1"></i> Sinyal Sedang</span>
+                    </div>
+                    <div class="p-2 bg-light rounded-3 text-center"><i class="bi bi-router-fill fs-4 text-primary"></i></div>
+                </div>
+                <hr class="opacity-10 my-2">
+                <div class="row mt-2">
+                    <div class="col-6"><small class="text-muted">Alamat IP Lokal</small><br><strong class="small">192.168.1.22</strong></div>
+                    <div class="col-6"><small class="text-muted">Target Komoditas</small><br><strong class="small">Udang Windu</strong></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <main id="chatView" class="view-section" style="padding: 0; margin-top:-25px;">
+        <div class="fixed-sub-header" style="border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;">
+            <button class="back-btn-premium m-0" style="width: 35px; height: 35px;" onclick="AppController.switchTab('homeView', 'nav-home')"><i class="bi bi-arrow-left fs-5 text-primary"></i></button>
+            <h4 class="fw-bold m-0 flex-grow-1 text-center" style="color: var(--accent-color); margin-left:-35px!important;"><i class="bi bi-stars text-warning me-2"></i>TambakBot</h4>
+            <div style="width: 24px;"></div> 
+        </div>
+        <div class="header-spacer" style="height: 60px;"></div>
+        
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-bubble chat-bot shadow-sm">
+                Halo Pak Nafri! Saya adalah <b>TambakBot</b>, asisten AI cerdas (LLM) dari TambakTech.<br><br>Sistem saya terhubung dengan sensor Anda secara live. Silakan tanyakan hal terkait air, pakan, teori FCR, maupun cuaca hari ini.
+            </div>
+            <div style="clear:both;"></div>
+            <div class="typing-indicator shadow-sm" id="typingIndicator"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        </div>
+        
+        <div class="chat-input-wrapper">
+            <div class="chip-scroll px-2">
+                <div class="chat-chip shadow-sm" onclick="NLPController.insertAndSend('Bagaimana cuaca hari ini?')">Info Cuaca</div>
+                <div class="chat-chip shadow-sm" onclick="NLPController.insertAndSend('Tolong analisis kualitas air Kolam Alpha')">Analisis Kolam Alpha</div>
+                <div class="chat-chip shadow-sm" onclick="NLPController.insertAndSend('Berapa rekomendasi pakan?')">Rekomendasi Pakan</div>
+            </div>
+            <div class="input-group mt-2 px-2 pb-2">
+                <input type="text" id="chatInput" class="form-control rounded-pill bg-light border-0 px-4 py-3 fw-medium" placeholder="Ketik pesan Anda di sini..." style="box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+                <button class="btn btn-primary rounded-circle ms-2 d-flex align-items-center justify-content-center shadow-sm" onclick="NLPController.processUserInput()" style="width:55px; height:55px; background: var(--accent-color); border:none;"><i class="bi bi-send-fill fs-5"></i></button>
+            </div>
+        </div>
+    </main>
+
+    <main id="notifView" class="view-section">
+        <div class="fixed-sub-header">
+            <button class="back-btn-premium m-0" onclick="AppController.switchTab('homeView', 'nav-home')"><i class="bi bi-arrow-left fs-4 text-primary"></i></button>
+            <h4 class="fw-bold m-0 flex-grow-1" style="color: var(--accent-color); margin-left: 10px !important;">Pusat Notifikasi</h4>
+        </div>
+        <div class="header-spacer"></div>
+        
+        <div class="d-flex gap-2 mb-4">
+            <button class="btn btn-outline-danger w-100 rounded-pill fw-bold py-2 border-2 shadow-sm" onclick="MachineLearningCore.triggerEmergencyProtocolDemo()"><i class="bi bi-bug-fill me-1"></i> Uji Coba Peringatan</button>
+            <button class="btn btn-light text-primary fw-bold rounded-pill border shadow-sm px-4" onclick="AppController.clearNotifications()" title="Tandai Semua Dibaca"><i class="bi bi-check-all fs-4"></i></button>
+        </div>
+
+        <h6 class="fw-bold text-muted text-uppercase mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">Riwayat Log Sistem</h6>
+        <div class="list-group" id="notifList">
+            <div class="list-group-item border-0 card-expert mb-3 p-4" style="background-color: #ffffff; border-left-width: 6px; border-left-style: solid; border-left-color: #cbd5e0; box-shadow: 0px 4px 15px rgba(0,0,0,0.02);">
+                <div class="d-flex w-100 justify-content-between mb-2">
+                    <h6 class="mb-1 fw-bold text-secondary"><i class="bi bi-shield-fill-check me-2 fs-5"></i>Sistem Berjalan Normal</h6>
+                    <small class="text-muted fw-bold time-ago" data-timestamp="">Baru saja</small>
+                </div>
+                <p class="mb-0 small text-muted lh-base">Seluruh sensor IoT ESP32 (Suhu, pH, DO) telah berhasil terkalibrasi dan melakukan koneksi dengan server utama TambakTech.</p>
+            </div>
+        </div>
+    </main>
+
+    <main id="profileView" class="view-section">
+        <div class="fixed-sub-header">
+            <button class="back-btn-premium m-0" onclick="AppController.switchTab('homeView', 'nav-home')"><i class="bi bi-arrow-left fs-4 text-primary"></i></button>
+            <h4 class="fw-bold m-0 flex-grow-1" style="color: var(--accent-color); margin-left: 10px !important;">Pengaturan Akun</h4>
+            <button class="btn btn-outline-primary btn-sm rounded-pill fw-bold px-4 shadow-sm" id="btnEditProfile" onclick="ProfileController.handleToggleButton()"><i class="bi bi-pencil-square me-1"></i> Edit Data</button>
+        </div>
+        <div class="header-spacer"></div>
+
+        <div class="card card-expert p-4 text-center mb-4">
+            <div class="profile-img-wrapper" onclick="ProfileController.triggerImageUpload()" title="Klik untuk mengubah foto profil">
+                <img src="logo.png" id="profileImagePreview" alt="Foto Profil Pengguna" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3135/3135715.png'">
+                <div class="profile-img-overlay" id="cameraOverlay"><i class="bi bi-camera-fill fs-5"></i></div>
+            </div>
+            <input type="file" id="profileUpload" accept="image/png, image/jpeg" style="display: none;" onchange="ProfileController.handleImageUpload(event)">
+            
+            <h4 class="fw-bold m-0 mt-3 text-dark" id="displayNamaProf">Moh. Nafri Rehanata</h4>
+            <div class="mt-3">
+                <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-4 py-2 fw-bold border border-primary border-opacity-25" style="letter-spacing: 0.5px;">
+                    <i class="bi bi-patch-check-fill me-1"></i> Akun Premium SaaS
+                </span>
+            </div>
+        </div>
+
+        <div class="card card-expert p-4 mb-4">
+            <h6 class="fw-bold text-secondary mb-4 text-uppercase" style="letter-spacing: 1px;"><i class="bi bi-person-lines-fill me-2 fs-5"></i>Data Operasional</h6>
+            <form id="profileForm" onsubmit="ProfileController.saveChanges(event)">
+                <div class="form-floating mb-3"><input type="text" class="form-control fw-bold text-dark" id="inputNama" value="Moh. Nafri Rehanata" disabled required><label>Nama Lengkap (Sesuai KTP)</label></div>
+                <div class="row mb-3 g-2">
+                    <div class="col-5">
+                        <div class="form-floating">
+                            <select class="form-select fw-bold text-dark" id="inputGender" disabled>
+                                <option value="L" selected>Laki-Laki</option>
+                                <option value="P">Perempuan</option>
+                            </select>
+                            <label>Gender</label>
+                        </div>
+                    </div>
+                    <div class="col-7">
+                        <div class="form-floating"><input type="tel" class="form-control fw-bold text-dark" id="inputPhone" value="081234567890" disabled required pattern="[0-9]{10,13}"><label>No. WhatsApp Aktif</label></div>
+                    </div>
+                </div>
+                <div class="form-floating mb-3"><input type="email" class="form-control fw-bold text-dark" id="inputEmail" value="nafri.statistika@its.ac.id" disabled required><label>Alamat Email Institusi/Bisnis</label></div>
+                <div class="row mb-3 g-2">
+                    <div class="col-6">
+                        <div class="form-floating"><select class="form-select fw-bold text-dark" id="inputNegara" disabled><option value="ID" selected>Indonesia</option></select><label>Negara</label></div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-floating"><select class="form-select fw-bold text-dark" id="inputProvinsi" disabled><option value="Jawa Timur" selected>Jawa Timur</option></select><label>Provinsi</label></div>
+                    </div>
+                </div>
+                <div class="row mb-3 g-2">
+                    <div class="col-8">
+                        <div class="form-floating">
+                            <select class="form-select fw-bold text-dark" id="inputKabupaten" disabled onchange="AppController.fetchLiveWeather()">
+                                <option value="Sumenep" data-lat="-7.0167" data-lon="113.8667" selected>Kab. Sumenep</option>
+                                <option value="Surabaya" data-lat="-7.2504" data-lon="112.7688">Kota Surabaya</option>
+                                <option value="Sidoarjo" data-lat="-7.4478" data-lon="112.7183">Kab. Sidoarjo</option>
+                                <option value="Gresik" data-lat="-7.4569" data-lon="112.6517">Kab. Gresik</option>
+                            </select>
+                            <label>Kabupaten / Kota</label>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="form-floating"><input type="number" class="form-control fw-bold text-dark" id="inputKodePos" value="69411" disabled required><label>Kode Pos</label></div>
+                    </div>
+                </div>
+                <div class="form-floating mb-4"><input type="number" class="form-control fw-bold text-dark" id="inputLuas" value="4000" min="100" disabled required><label>Estimasi Total Luas Lahan (m²)</label></div>
+                <div class="form-floating mb-4"><input type="password" class="form-control fw-bold text-dark" id="inputPassword" value="tambaktech2026" disabled required><label>Password Keamanan Akun</label></div>
+                <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-3 d-none shadow-lg mt-2" id="btnSaveProfile" style="background: var(--secondary-color); border:none; font-size: 1.1rem;"><i class="bi bi-cloud-arrow-up-fill me-2 fs-5"></i>Sinkronisasi Perubahan</button>
+            </form>
+        </div>
+        
+        <button class="btn btn-light text-danger w-100 rounded-pill fw-bold py-3 mb-5 shadow-sm border border-danger border-opacity-25 bg-danger bg-opacity-10" onclick="AppController.logoutSystem()"><i class="bi bi-box-arrow-right me-2 fs-5"></i>Keluar dari Aplikasi (Logout)</button>
+    </main>
+
+    <!-- Modal Paywall -->
+    <div class="modal fade" id="paywallModal" tabindex="-1" aria-labelledby="paywallModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+          <div class="modal-header text-white" style="background: var(--accent-color); border-radius: 15px 15px 0 0; padding: 20px;">
+              <h5 class="modal-title fw-bold" id="paywallModalLabel"><i class="bi bi-gem text-warning me-2"></i>Ekspansi Lisensi IoT SaaS</h5>
+              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body p-4 bg-light">
+            <div class="text-center mb-4 bg-white p-4 rounded-4 shadow-sm border">
+                <span class="badge bg-success mb-2 rounded-pill px-3 py-2 fw-bold text-uppercase" style="letter-spacing: 1px;">Paket Skala Industri</span>
+                <h2 class="fw-black text-dark m-0" style="font-size: 2.2rem;">Rp 1.650.000</h2>
+                <hr class="opacity-10 my-3">
+                <div class="text-start small text-muted">
+                    <div class="d-flex justify-content-between mb-1"><span>Perangkat Sensor Fisik (Sekali Beli):</span><strong class="text-dark">Rp 1.500.000</strong></div>
+                    <div class="d-flex justify-content-between"><span>Langganan AI Bulan Pertama:</span><strong class="text-dark">Rp 150.000</strong></div>
+                </div>
+                <p class="small text-danger mt-3 mb-0 lh-sm fw-bold"><i class="bi bi-info-circle-fill"></i> Wajib membeli unit sensor baru untuk integrasi setiap kolam.</p>
+            </div>
+            <h6 class="fw-bold mb-3 text-secondary text-uppercase" style="font-size: 0.8rem; letter-spacing: 1px;">Gateway Pembayaran Digital</h6>
+            <form id="paymentForm">
+                <label class="pay-method d-flex align-items-center w-100 p-3 bg-white rounded-4 mb-3 border border-2 shadow-sm">
+                    <input type="radio" name="payment_method" value="qris" checked class="form-check-input mt-0" style="transform: scale(1.3);">
+                    <div class="flex-grow-1 fw-bold text-dark ms-3">QRIS Dinamis<small class="d-block text-muted fw-normal">Gopay, OVO, Dana, ShopeePay</small></div>
+                    <i class="bi bi-qr-code-scan text-dark fs-2"></i>
+                </label>
+                <label class="pay-method d-flex align-items-center w-100 p-3 bg-white rounded-4 mb-2 border border-2 shadow-sm">
+                    <input type="radio" name="payment_method" value="va" class="form-check-input mt-0" style="transform: scale(1.3);">
+                    <div class="flex-grow-1 fw-bold text-dark ms-3">Virtual Account Bank<small class="d-block text-muted fw-normal">BCA, Mandiri, BNI, BRI</small></div>
+                    <i class="bi bi-bank text-primary fs-2"></i>
+                </label>
+            </form>
+          </div>
+          <div class="modal-footer border-0 pb-4 px-4 bg-light">
+            <button type="button" class="btn btn-secondary rounded-pill fw-bold py-3 w-100 mb-2" data-bs-dismiss="modal">Batalkan Transaksi</button>
+            <button type="button" class="btn btn-primary w-100 rounded-pill fw-bold py-3 shadow-sm m-0" style="background: var(--accent-color); border:none; font-size: 1.1rem;" onclick="PaymentController.processTransaction()">
+                <i class="bi bi-shield-lock-fill me-2"></i> Konfirmasi Pembayaran Aman
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Konfigurasi Kolam -->
+    <div class="modal fade" id="configPondModal" tabindex="-1" aria-labelledby="configPondModalLabel" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+          <div class="modal-header text-white" style="background: var(--secondary-color); border-radius: 15px 15px 0 0; padding: 20px;">
+              <h5 class="modal-title fw-bold"><i class="bi bi-sliders me-2"></i>Konfigurasi Aset Kolam Baru</h5>
+          </div>
+          <div class="modal-body p-4 bg-light">
+            <div class="alert alert-success small fw-bold mb-4 border-0 shadow-sm"><i class="bi bi-check-circle-fill me-1"></i> Pembayaran berhasil. Silakan atur parameter integrasi IoT Anda.</div>
+            <form id="newPondForm" onsubmit="IoTController.saveNewPondConfig(event)">
+                <div class="form-floating mb-3"><input type="text" class="form-control fw-bold" id="newPondName" placeholder="Gamma" required><label>Nama Pengenal Kolam (Misal: Gamma)</label></div>
+                <div class="form-floating mb-3"><input type="text" class="form-control fw-bold" id="newPondType" placeholder="Udang Vaname" required><label>Target Komoditas (Jenis Udang/Ikan)</label></div>
+                <div class="form-floating mb-4"><input type="text" class="form-control fw-bold text-primary" id="newPondIP" placeholder="192.168.1.30" value="192.168.1.30" required><label>IP Address Alokasi Node IoT</label></div>
+                <h6 class="fw-bold text-danger text-uppercase mb-3" style="font-size: 0.8rem; letter-spacing: 1px;">Pengaturan AI & Parameter Kritis</h6>
+                <p class="small text-muted mb-3 lh-sm">Tentukan batas bawah oksigen (DO Threshold) agar sistem prediksi AI memberikan peringatan darurat yang sesuai dengan daya dukung (*carrying capacity*) kolam ini.</p>
+                <div class="form-floating mb-3">
+                    <select class="form-select fw-bold" id="newPondLimitType" onchange="IoTController.toggleCustomLimitDisplay(this.value)">
+                        <option value="auto" selected>Gunakan Standar AI (3.0 mg/L)</option>
+                        <option value="custom">Tentukan Batas Manual Sendiri</option>
+                    </select>
+                    <label>Metode Penentuan Batas Darurat</label>
+                </div>
+                <div class="form-floating mb-3" id="customLimitWrapper" style="display:none;"><input type="number" class="form-control fw-bold text-danger" id="newPondLimitValue" step="0.1" value="3.0" min="1.0" max="6.0"><label>Batas Oksigen (mg/L) Kritis</label></div>
+                <button type="submit" class="btn btn-success w-100 rounded-pill fw-bold py-3 mt-3 shadow-sm fs-6"><i class="bi bi-hdd-network-fill me-2"></i> Simpan & Sinkronisasi Sensor</button>
+                <button type="button" class="btn btn-secondary mt-2 w-100 rounded-pill fw-bold py-3" data-bs-dismiss="modal">Batalkan / Kembali</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a class="nav-item active" id="nav-home" onclick="AppController.switchTab('homeView', 'nav-home')"><i class="bi bi-house-door-fill"></i><span>Beranda</span></a>
+        <a class="nav-item" id="nav-chat" onclick="AppController.switchTab('chatView', 'nav-chat')"><i class="bi bi-chat-square-dots-fill"></i><span>AI Chat</span></a>
+        <a class="nav-item" id="nav-notif" onclick="AppController.switchTab('notifView', 'nav-notif')"><i class="bi bi-bell-fill"></i><span>Notifikasi</span><div class="notif-badge" id="notifBadge">0</div></a>
+        <a class="nav-item" id="nav-profile" onclick="AppController.switchTab('profileView', 'nav-profile')"><i class="bi bi-person-fill"></i><span>Profil</span></a>
+    </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ========================================================
+     BAGIAN 3: JAVASCRIPT GABUNGAN 
+     (API BACKEND, BMKG SYNC, REAL LSTM NEURAL NETWORK MATH, GEMINI API)
+======================================================== -->
+<script>
+    const API_BASE = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') ? 'http://127.0.0.1:8000' : '';
+
+    function togglePassword(inputId, iconSpan) {
+        const input = document.getElementById(inputId); const icon = iconSpan.querySelector('i');
+        if (input.type === 'password') { input.type = 'text'; icon.className = 'bi bi-eye text-primary'; } else { input.type = 'password'; icon.className = 'bi bi-eye-slash text-muted'; }
+    }
+
+    const AuthUI = {
+        toggleView: function(viewId) {
+            document.getElementById('loginSection').style.display = 'none'; document.getElementById('registerSection').style.display = 'none'; document.getElementById('paymentSection').style.display = 'none'; document.getElementById('statusAlert').classList.add('d-none'); document.getElementById(viewId).style.display = 'block';
+        },
+        processOnboardingPayment: function() {
+            const btn = document.getElementById('btnPayAndStart'); const alertBox = document.getElementById('statusAlert');
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Memproses Pembayaran...`; btn.disabled = true;
+            setTimeout(() => {
+                alertBox.classList.remove('d-none'); alertBox.classList.replace('alert-danger', 'alert-success'); alertBox.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Pembayaran Berhasil! Mengalihkan...';
+                setTimeout(() => { document.getElementById('loginWrapper').style.opacity = '0'; setTimeout(() => { document.getElementById('loginWrapper').style.display = 'none'; document.getElementById('dashboardWrapper').style.display = 'block'; document.getElementById('dashboardWrapper').style.opacity = '1'; }, 500); }, 1000);
+            }, 2000);
+        }
+    };
+
+    document.getElementById('registerForm').addEventListener('submit', function(e) { e.preventDefault(); AuthUI.toggleView('paymentSection'); });
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault(); const userVal = document.getElementById('loginUser').value.trim().toLowerCase(); const passVal = document.getElementById('loginPass').value.trim(); const btn = document.getElementById('btnLogin'); const alertBox = document.getElementById('statusAlert');
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span> Memverifikasi...`; btn.disabled = true; alertBox.classList.add('d-none'); alertBox.classList.replace('alert-success', 'alert-danger');
+
+        setTimeout(() => {
+            if (userVal === "nafrirehanata" && passVal === "tambaktech2026") {
+                document.getElementById('loginWrapper').style.opacity = '0';
+                setTimeout(() => { document.getElementById('loginWrapper').style.display = 'none'; document.getElementById('dashboardWrapper').style.display = 'block'; document.getElementById('dashboardWrapper').style.opacity = '1'; }, 500);
+            } else {
+                alertBox.classList.remove('d-none'); alertBox.innerText = "Username atau Password tidak valid!"; btn.innerHTML = "Masuk ke Dashboard"; btn.disabled = false;
+            }
+        }, 1200); 
+    });
+
+    const AppController = {
+        switchTab: function(viewId, navId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); document.getElementById(viewId).classList.add('active');
+            if(navId) { document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); document.getElementById(navId).classList.add('active'); } window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (viewId !== 'forecastView') {
+                if (IoTController.charts.forecast) {
+                    IoTController.charts.forecast.data.datasets[1].data = []; IoTController.charts.forecast.update();
+                    document.getElementById('predictionStatusPanel').style.display = 'none'; 
+                    const btn = document.getElementById('btnPredict'); btn.innerHTML = '<i class="bi bi-play-circle-fill me-2 fs-5"></i> Mulai Komputasi Prediksi AI'; btn.classList.replace('btn-outline-danger', 'btn-danger'); btn.disabled = false;
+                }
+            }
+        },
+        closeToast: function() { const toast = document.getElementById('adminToast'); toast.style.top = '-150px'; toast.classList.remove('show'); clearTimeout(IoTController.state.toastTimer); },
+        clearNotifications: function() {
+            IoTController.state.unreadNotifications = 0; document.getElementById('notifBadge').style.display = 'none';
+            document.querySelectorAll('.unread-notif').forEach(el => { el.classList.remove('unread-notif'); el.style.backgroundColor = '#ffffff'; el.style.borderLeftColor = '#cbd5e0'; const hint = el.querySelector('.read-hint'); if (hint) hint.style.display = 'none'; const title = el.querySelector('h6'); if(title) { title.classList.remove('text-danger'); title.classList.add('text-secondary'); } });
+            alert('Status Diperbarui: Seluruh riwayat sistem telah ditandai sebagai dibaca.');
+        },
+        markAsRead: function(element) {
+            if(element.classList.contains('unread-notif')) {
+                element.classList.remove('unread-notif'); element.style.backgroundColor = '#ffffff'; element.style.borderLeftColor = '#cbd5e0';
+                const hint = element.querySelector('.read-hint'); if (hint) hint.style.display = 'none';
+                const title = element.querySelector('h6'); if(title) { title.classList.remove('text-danger'); title.classList.add('text-secondary'); }
+                if(IoTController.state.unreadNotifications > 0) { IoTController.state.unreadNotifications -= 1; const badge = document.getElementById('notifBadge'); if(IoTController.state.unreadNotifications > 0) { badge.innerText = IoTController.state.unreadNotifications; } else { badge.style.display = 'none'; } }
+            }
+        },
+        fetchLiveWeather: async function() {
+            try {
+                const citySelect = document.getElementById('inputKabupaten');
+                const lat = citySelect.options[citySelect.selectedIndex].getAttribute('data-lat');
+                const lon = citySelect.options[citySelect.selectedIndex].getAttribute('data-lon');
+                const cityName = citySelect.options[citySelect.selectedIndex].text;
+                
+                const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                if(!response.ok) throw new Error("API Terputus");
+                
+                const data = await response.json();
+                const temp = Math.round(data.current_weather.temperature);
+                
+                document.getElementById('weatherTemp').innerHTML = `<i class="bi bi-cloud-sun-fill text-warning me-1"></i>${temp}°C`;
+                document.getElementById('weatherDesc').innerText = `${cityName}`;
+                
+                IoTController.state.bmkgTemp = temp;
+                
+            } catch (error) {
+                document.getElementById('weatherTemp').innerHTML = `<i class="bi bi-cloud-sun-fill text-warning me-1"></i>31°C`;
+                document.getElementById('weatherDesc').innerText = "Sumenep";
+                IoTController.state.bmkgTemp = 31.0; 
+            }
+        },
+        logoutSystem: function() {
+            if(confirm('Apakah Anda yakin ingin keluar dari sesi aman ini?')) {
+                document.getElementById('dashboardWrapper').style.opacity = '0';
+                document.getElementById('loginForm').reset();
+                const passInput = document.getElementById('loginPass'); passInput.type = 'password'; passInput.nextElementSibling.querySelector('i').className = 'bi bi-eye-slash text-muted';
+                setTimeout(() => { document.getElementById('dashboardWrapper').style.display = 'none'; document.getElementById('loginWrapper').style.display = 'flex'; setTimeout(() => { document.getElementById('loginWrapper').style.opacity = '1'; }, 50); }, 500);
+            }
+        }
+    };
+
+    const TimeController = {
+        calculateTimeAgo: function(timestamp) {
+            const secondsPast = Math.floor((Date.now() - timestamp) / 1000);
+            if (secondsPast < 60) return 'Baru saja'; if (secondsPast < 3600) return Math.floor(secondsPast / 60) + ' mnt lalu';
+            if (secondsPast < 86400) return Math.floor(secondsPast / 3600) + ' jam lalu'; return Math.floor(secondsPast / 86400) + ' hari lalu';
+        },
+        startTicker: function() {
+            document.querySelectorAll('.time-ago').forEach(el => { if(!el.getAttribute('data-timestamp')) el.setAttribute('data-timestamp', Date.now()); });
+            setInterval(() => { document.querySelectorAll('.time-ago').forEach(el => { const timestamp = parseInt(el.getAttribute('data-timestamp')); if(timestamp) el.innerText = this.calculateTimeAgo(timestamp); }); }, 10000); 
+        }
+    };
+
+    const ProfileController = {
+        state: { isEditing: false }, backupData: {}, 
+        handleToggleButton: function() { this.toggleEditMode(!this.state.isEditing); },
+        toggleEditMode: function(toEdit) {
+            const inputs = document.querySelectorAll('#profileForm input, #profileForm select'); const btnEdit = document.getElementById('btnEditProfile'); const btnSave = document.getElementById('btnSaveProfile'); const cameraOverlay = document.getElementById('cameraOverlay');
+            if (toEdit) {
+                this.state.isEditing = true; cameraOverlay.style.display = 'flex';
+                inputs.forEach(input => { this.backupData[input.id] = input.value; input.disabled = false; });
+                btnSave.classList.remove('d-none'); btnEdit.innerHTML = '<i class="bi bi-x-lg"></i> Batalkan'; btnEdit.classList.replace('btn-outline-primary', 'btn-outline-danger');
+            } else {
+                this.state.isEditing = false; cameraOverlay.style.display = 'none';
+                inputs.forEach(input => { if (this.backupData[input.id] !== undefined) input.value = this.backupData[input.id]; input.disabled = true; }); AppController.fetchLiveWeather();
+                btnSave.classList.add('d-none'); btnEdit.innerHTML = '<i class="bi bi-pencil-square"></i> Edit Data'; btnEdit.classList.replace('btn-outline-danger', 'btn-outline-primary');
+            }
+        },
+        triggerImageUpload: function() { if (!this.state.isEditing) { alert("Akses Ditolak: Aktifkan 'Edit' terlebih dahulu."); return; } document.getElementById('profileUpload').click(); },
+        saveChanges: function(event) { event.preventDefault(); const newName = document.getElementById('inputNama').value; document.getElementById('homeName').innerText = newName; document.getElementById('displayNamaProf').innerText = newName; AppController.fetchLiveWeather(); alert("Operasi Berhasil: Kredensial profil diperbarui."); this.backupData = {}; this.toggleEditMode(false); },
+        handleImageUpload: function(event) { const file = event.target.files[0]; if (!file || !file.type.match('image.*')) return; const reader = new FileReader(); reader.onload = function(e) { document.getElementById('profileImagePreview').src = e.target.result; document.getElementById('topbarLogo').src = e.target.result; }; reader.readAsDataURL(file); }
+    };
+
+    const PaymentController = {
+        processTransaction: function() { setTimeout(() => { const paywallEl = document.getElementById('paywallModal'); const paywallModalObj = bootstrap.Modal.getInstance(paywallEl) || new bootstrap.Modal(paywallEl); paywallModalObj.hide(); setTimeout(() => { const configEl = document.getElementById('configPondModal'); const configModalObj = new bootstrap.Modal(configEl); configModalObj.show(); }, 400); }, 800); }
+    };
+
+    const IoTController = {
+        state: { 
+            activePond: "Alpha", 
+            bmkgTemp: 31.0, 
+            timeLabelsArray: [], 
+            dissolvedOxygenArray: [], 
+            unreadNotifications: 0, 
+            toastTimer: null, 
+            customLimits: { "Alpha": 3.0, "Beta": 3.0 } 
+        },
+        charts: { live: null, forecast: null },
+
+        initializeCharts: function() {
+            const commonOptions = { responsive: true, maintainAspectRatio: false, animation: false, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }, scales: { y: { suggestedMin: 1.0, suggestedMax: 8.0, grid: { color: 'rgba(0,0,0,0.05)' } }, x: { grid: { display: false } } }, elements: { point: { radius: 0, hitRadius: 10, hoverRadius: 5 } } };
+            const ctxLive = document.getElementById('liveChart').getContext('2d');
+            this.charts.live = new Chart(ctxLive, { type: 'line', data: { labels: this.state.timeLabelsArray, datasets: [{ label: 'DO (mg/L)', data: this.state.dissolvedOxygenArray, borderColor: '#2c5364', backgroundColor: 'rgba(44, 83, 100, 0.1)', fill: true, tension: 0.4, borderWidth: 3 }] }, options: commonOptions });
+            const ctxForecast = document.getElementById('forecastChart').getContext('2d');
+            this.charts.forecast = new Chart(ctxForecast, { type: 'line', data: { labels: this.state.timeLabelsArray, datasets: [ { label:'Historis', data: this.state.dissolvedOxygenArray, borderColor: '#2c5364', tension: 0.4, borderWidth: 2 }, { label:'Prediksi AI', data: [], borderColor: '#e53e3e', borderDash:[6,6], tension: 0.4, borderWidth: 3 } ] }, options: { ...commonOptions, plugins: { legend: { display: true, position: 'bottom' } } } });
+            this.updateThresholdLabelUI();
+        },
+
+        changeActivePond: function(pondName) {
+            this.state.activePond = pondName;
+            this.generateInitialData();
+            document.getElementById('selectPondLive').value = pondName; document.getElementById('selectPondForecast').value = pondName;
+            document.getElementById('liveConnectionStatus').innerHTML = `<i class="bi bi-link-45deg fs-6 me-1"></i> Node ESP32 Terhubung Stabil ke <b>Kolam ${pondName}</b>`; document.getElementById('forecastConnectionStatus').innerHTML = `<i class="bi bi-database-check fs-6 me-1"></i> Model AI sinkron dengan Database Historis <b>Kolam ${pondName}</b>`;
+            if (this.charts.forecast) { this.charts.forecast.data.datasets[1].data = []; this.charts.forecast.update(); document.getElementById('predictionStatusPanel').style.display = 'none'; const btn = document.getElementById('btnPredict'); btn.innerHTML = '<i class="bi bi-play-circle-fill me-2 fs-5"></i> Mulai Komputasi Prediksi AI'; btn.classList.replace('btn-outline-danger', 'btn-danger'); btn.disabled = false; }
+            this.updateThresholdLabelUI();
+        },
+        
+        updateThresholdLabelUI: function() { const currentLimit = this.state.customLimits[this.state.activePond] || 3.0; const thresholdLabel = document.getElementById('thresholdLabelText'); if (thresholdLabel) thresholdLabel.innerText = `Proyeksi Garis Merah (Threshold: ${parseFloat(currentLimit).toFixed(1)} mg/L)`; },
+        toggleCustomLimitDisplay: function(val) { const wrapper = document.getElementById('customLimitWrapper'); if (val === 'custom') { wrapper.style.display = 'block'; } else { wrapper.style.display = 'none'; } },
+
+        saveNewPondConfig: function(event) {
+            event.preventDefault();
+            const nameInput = document.getElementById('newPondName').value.trim(); const typeInput = document.getElementById('newPondType').value.trim(); const ipInput = document.getElementById('newPondIP').value.trim();
+            const limitType = document.getElementById('newPondLimitType').value;
+            let customLimit = 3.0; if (limitType === 'custom') { customLimit = parseFloat(document.getElementById('newPondLimitValue').value); if (isNaN(customLimit) || customLimit < 1.0 || customLimit > 6.0) customLimit = 3.0; }
+            this.state.customLimits[nameInput] = customLimit;
+            
+            const optionHTML = `<option value="${nameInput}">📍 Kolam ${nameInput} (${typeInput})</option>`; document.getElementById('selectPondLive').insertAdjacentHTML('beforeend', optionHTML); document.getElementById('selectPondForecast').insertAdjacentHTML('beforeend', optionHTML);
+            const newCardHTML = `<div class="card card-expert mb-3 p-3 border-start border-primary border-5"><div class="d-flex justify-content-between align-items-start mb-2"><div><h5 class="fw-bold m-0 text-dark mb-1">Kolam ${nameInput}</h5><span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-1"><i class="bi bi-wifi fs-6 me-1"></i> Sinyal Kuat</span><span class="badge bg-primary bg-opacity-10 text-primary border border-primary rounded-pill px-2 py-1 ms-1" style="font-size:0.6rem;">Limit DO: ${customLimit.toFixed(1)}</span></div><div class="p-2 bg-light rounded-3 text-center"><i class="bi bi-router-fill fs-4 text-primary"></i></div></div><hr class="opacity-10 my-2"><div class="row mt-2"><div class="col-6"><small class="text-muted">Alamat IP Lokal</small><br><strong class="small">${ipInput}</strong></div><div class="col-6"><small class="text-muted">Target Komoditas</small><br><strong class="small">${typeInput}</strong></div></div></div>`;
+            document.getElementById('pondListContainer').insertAdjacentHTML('beforeend', newCardHTML);
+            const configEl = document.getElementById('configPondModal'); const configModalObj = bootstrap.Modal.getInstance(configEl); if(configModalObj) configModalObj.hide();
+            document.body.classList.remove('modal-open'); const modalBackdrops = document.getElementsByClassName('modal-backdrop'); while(modalBackdrops[0]) modalBackdrops[0].parentNode.removeChild(modalBackdrops[0]);
+            alert(`Integrasi Selesai! Node Sensor untuk Kolam ${nameInput} telah terhubung.`);
+            this.changeActivePond(nameInput); document.getElementById('newPondForm').reset(); this.toggleCustomLimitDisplay('auto'); AppController.switchTab('pondView', 'nav-home');
+        },
+
+        generateInitialData: function() {
+            let now = new Date();
+            this.state.timeLabelsArray.length = 0; this.state.dissolvedOxygenArray.length = 0; 
+            for(let i=14; i>=0; i--) {
+                let d = new Date(now.getTime() - i*120000); 
+                let hours = d.getHours(); let minutes = d.getMinutes(); let exactHour = hours + (minutes/60);
+                let timeStr = String(hours).padStart(2,'0') + ':' + String(minutes).padStart(2,'0');
+                this.state.timeLabelsArray.push(timeStr);
+                
+                let pondMultiplier = this.state.activePond === "Beta" ? 0.8 : 1.0;
+                let valDO = (5.0 + 2.5 * Math.sin((exactHour - 9) * Math.PI / 12)) * pondMultiplier + (Math.random() * 0.1 - 0.05);
+                if(valDO > 9.0) valDO = 9.0; if(valDO < 1.0) valDO = 1.0;
+                this.state.dissolvedOxygenArray.push(valDO);
+            }
+            if(this.charts.live && this.charts.forecast) { this.charts.live.update(); this.charts.forecast.update(); }
+        },
+
+        calculateWQI: function(doVal, tempVal, phVal) {
+            let doScore = (doVal >= 5.0) ? 100 : (doVal / 5.0) * 100;
+            let tempScore = (tempVal >= 28.0 && tempVal <= 31.0) ? 100 : (tempVal > 31.0 ? 100 - ((tempVal-31)*10) : 100 - ((28-tempVal)*10)); 
+            let phScore = (phVal >= 7.5 && phVal <= 8.5) ? 100 : (phVal > 8.5 ? 100 - ((phVal-8.5)*20) : 100 - ((7.5-phVal)*20)); 
+            return Math.round((doScore * 0.5) + (tempScore * 0.25) + (phScore * 0.25));
+        },
+
+        processIncomingDataTick: async function() {
+            let newDOValue, currentTemp, currentPH;
+            let d = new Date(); let hours = d.getHours(); let minutes = d.getMinutes(); let exactHour = hours + (minutes/60);
+            let timeStr = String(hours).padStart(2,'0') + ':' + String(minutes).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0');
+            
+            document.getElementById('syncStatus').innerHTML = '<i class="bi bi-cloud-check-fill text-info me-1"></i> Sensor IoT Terhubung';
+            
+            let lastDO = this.state.dissolvedOxygenArray[this.state.dissolvedOxygenArray.length - 1];
+            let pondMultiplier = this.state.activePond === "Beta" ? 0.8 : 1.0;
+            let targetDO = (5.0 + 2.5 * Math.sin((exactHour - 9) * Math.PI / 12)) * pondMultiplier;
+            
+            newDOValue = lastDO + ((targetDO - lastDO) * 0.05) + (Math.random() * 0.02 - 0.01);
+            if(newDOValue > 9.0) newDOValue = 9.0; if(newDOValue < 1.0) newDOValue = 1.0; 
+            
+            currentTemp = this.state.bmkgTemp + 1.5 * Math.sin((exactHour - 7) * Math.PI / 12) + (Math.random() * 0.02 - 0.01);
+            currentPH = 7.8 + (Math.random() * 0.02 - 0.01);
+            
+            this.state.timeLabelsArray.push(timeStr); this.state.timeLabelsArray.shift(); 
+            this.state.dissolvedOxygenArray.push(newDOValue); this.state.dissolvedOxygenArray.shift();
+            
+            document.getElementById('valDO').innerText = newDOValue.toFixed(2);
+            document.getElementById('valTemp').innerText = currentTemp.toFixed(1);
+            document.getElementById('valPH').innerText = currentPH.toFixed(1);  
+            
+            let dynamicWQI = this.calculateWQI(newDOValue, currentTemp, currentPH);
+            document.getElementById('wqiValue').innerHTML = `${dynamicWQI}<span class="fs-5 text-muted fw-normal">/100</span>`;
+            
+            const wqiBadge = document.getElementById('wqiStatus');
+            if (dynamicWQI < 75) { wqiBadge.className = "badge bg-warning bg-opacity-10 text-warning border border-warning px-4 py-2 rounded-pill shadow-sm fw-bold"; wqiBadge.innerHTML = `<i class="bi bi-exclamation-triangle-fill me-1"></i> Perlu Perhatian`; } 
+            else { wqiBadge.className = "badge bg-success bg-opacity-10 text-success border border-success px-4 py-2 rounded-pill shadow-sm fw-bold"; wqiBadge.innerHTML = `<i class="bi bi-shield-fill-check me-1"></i> Ekosistem Prima`; }
+            
+            this.charts.live.update(); this.charts.forecast.update();
+        }
+    };
+
+    class RealLSTMNetwork {
+        constructor() {
+            this.W_f = 0.45; this.U_f = 0.25; this.b_f = 0.15; 
+            this.W_i = 0.35; this.U_i = 0.25; this.b_i = 0.10; 
+            this.W_c = 0.50; this.U_c = 0.30; this.b_c = 0.05; 
+            this.W_o = 0.40; this.U_o = 0.25; this.b_o = 0.10; 
+            this.h = 0.5; this.c = 0.5; 
+        }
+
+        sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+        tanh(x) { return Math.tanh(x); }
+
+        forward_step(x_t) {
+            let f_t = this.sigmoid((this.W_f * x_t) + (this.U_f * this.h) + this.b_f);
+            let i_t = this.sigmoid((this.W_i * x_t) + (this.U_i * this.h) + this.b_i);
+            let c_tilde = this.tanh((this.W_c * x_t) + (this.U_c * this.h) + this.b_c);
+            this.c = (f_t * this.c) + (i_t * c_tilde);
+            let o_t = this.sigmoid((this.W_o * x_t) + (this.U_o * this.h) + this.b_o);
+            this.h = o_t * this.tanh(this.c);
+            return this.h;
+        }
+
+        predict(historical_data, future_steps, current_hour) {
+            for(let val of historical_data) {
+                let x_norm = val / 10.0; 
+                this.forward_step(x_norm);
+            }
+
+            let predictions = [];
+            for(let i=1; i <= future_steps; i++) {
+                let future_hour = (current_hour + i) % 24;
+                let simulated_biological_rhythm = (5.0 + 2.5 * Math.sin((future_hour - 9) * Math.PI / 12)) / 10.0;
+                let next_hidden_state = this.forward_step(simulated_biological_rhythm);
+                let predicted_do = (next_hidden_state * 10.0) + (Math.random() * 0.1 - 0.05);
+                
+                if (predicted_do < 1.0) predicted_do = 1.0; 
+                if (predicted_do > 9.0) predicted_do = 9.0;
+                
+                predictions.push(predicted_do);
+            }
+            return predictions;
+        }
+    }
+
+    const MachineLearningCore = {
+        executeRealForecastModel: async function() {
+            const btn = document.getElementById('btnPredict');
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> LSTM Inference Beroperasi...';
+            btn.disabled = true;
+            const statusPanel = document.getElementById('predictionStatusPanel');
+            statusPanel.style.display = 'none';
+            
+            setTimeout(() => {
+                let predictionLabels = []; let predictionValues = Array(14).fill(null); 
+                let currentDO = IoTController.state.dissolvedOxygenArray[IoTController.state.dissolvedOxygenArray.length-1]; 
+                predictionValues.push(currentDO); 
+                
+                let d = new Date();
+                let currentExactHour = d.getHours() + (d.getMinutes()/60);
+                
+                const rawData = IoTController.state.dissolvedOxygenArray;
+                const lstm_model = new RealLSTMNetwork();
+                const results = lstm_model.predict(rawData, 6, currentExactHour);
+                
+                let isDanger = false; let lowestVal = 99;
+                const currentAlertThreshold = IoTController.state.customLimits[IoTController.state.activePond] || 3.0;
+
+                for(let i=0; i<6; i++) {
+                    d = new Date(d.getTime() + (60000 * 60)); 
+                    predictionLabels.push(String(d.getHours()).padStart(2,'0') + ':00');
+                    let val = results[i]; if (val < lowestVal) lowestVal = val;
+                    if (val < currentAlertThreshold) isDanger = true; 
+                    predictionValues.push(val);
+                }
+                
+                IoTController.charts.forecast.data.labels = IoTController.state.timeLabelsArray.concat(predictionLabels);
+                IoTController.charts.forecast.data.datasets[1].data = predictionValues;
+                IoTController.charts.forecast.update();
+                
+                let trendSlope = results[results.length-1] - results[0];
+                let expertAnalysis = "";
+                statusPanel.style.display = 'block'; const statusText = document.getElementById('predictionStatusText');
+                
+                if (isDanger) { 
+                    statusPanel.style.backgroundColor = '#fff5f5'; statusPanel.style.borderColor = '#fc8181'; 
+                    expertAnalysis = `<b>Analisis LSTM (Kritis):</b><br>Konteks *Cell State* mendeteksi siklus respirasi turun tajam. Proyeksi terendah akan menyentuh <b>${lowestVal.toFixed(2)} mg/L</b> dalam interval 6 jam. Nilai ini menembus <b>Batas Toleransi Spesifik Kolam (${currentAlertThreshold.toFixed(1)} mg/L)</b>. <br><br><b>Kesimpulan Operasional:</b> Segera intervensi mekanis (aktifkan aerator tambahan).`; 
+                } else if (trendSlope < -0.1) { 
+                    statusPanel.style.backgroundColor = '#fffaf0'; statusPanel.style.borderColor = '#f6e05e'; 
+                    expertAnalysis = `<b>Analisis LSTM (Waspada):</b><br>Jaringan saraf tiruan mendeteksi fase penurunan sirkadian (*downward seasonality*). Oksigen diproyeksikan turun ke <b>${lowestVal.toFixed(2)} mg/L</b>, namun masih di atas ambang batas <b>${currentAlertThreshold.toFixed(1)} mg/L</b>. <br><br><b>Kesimpulan Operasional:</b> Lakukan observasi lanjutan.`; 
+                } else { 
+                    statusPanel.style.backgroundColor = '#f0fff4'; statusPanel.style.borderColor = '#68d391'; 
+                    expertAnalysis = `<b>Analisis LSTM (Optimal):</b><br>Berdasarkan *Input Gate* historis, model memproyeksikan lintasan oksigen yang sangat sehat dengan titik terendah aman di <b>${lowestVal.toFixed(2)} mg/L</b>. <br><br><b>Kesimpulan Operasional:</b> Daya dukung lingkungan kolam bekerja seimbang.`; 
+                }
+                
+                statusText.innerHTML = expertAnalysis;
+                btn.innerHTML = '<i class="bi bi-arrow-clockwise me-2"></i> Kalkulasi Ulang Proyeksi'; btn.classList.replace('btn-danger', 'btn-outline-danger'); btn.disabled = false;
+            }, 2000); 
+        },
+
+        triggerEmergencyProtocolDemo: function() {
+            const toast = document.getElementById('adminToast'); const pondNameEl = document.getElementById('dangerPondName');
+            if(pondNameEl) pondNameEl.innerText = "Kolam " + IoTController.state.activePond;
+            if(IoTController.state.toastTimer) clearTimeout(IoTController.state.toastTimer);
+            toast.style.display = 'block'; toast.style.visibility = 'visible'; toast.style.opacity = '1'; toast.style.zIndex = '999999'; toast.style.top = '25px'; toast.classList.add('show');
+            IoTController.state.toastTimer = setTimeout(() => { toast.style.top = '-150px'; toast.classList.remove('show'); }, 5000);
+            
+            IoTController.state.unreadNotifications += 1; const badge = document.getElementById('notifBadge'); badge.innerText = IoTController.state.unreadNotifications; badge.style.display = 'flex';
+            
+            const logHTML = `<div class="list-group-item border-0 card-expert mb-3 p-4 unread-notif" style="background-color: #fff5f5; border-left-width: 6px; border-left-style: solid; border-left-color: #e53e3e; box-shadow: 0px 4px 15px rgba(229,62,62,0.1); cursor: pointer; transition: all 0.3s ease;" onclick="AppController.markAsRead(this)"><div class="d-flex w-100 justify-content-between mb-2"><h6 class="mb-1 fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>Anomali Kolam ${IoTController.state.activePond}</h6><small class="text-danger fw-black time-ago" data-timestamp="${Date.now()}">Baru saja</small></div><p class="mb-0 small text-dark lh-base">Mesin Inference (LSTM) memperingatkan kemungkinan kematian masal udang (Mortalitas). Prosedur darurat telah dikonfigurasi.</p><span class="read-hint"><br><b>💡 Klik pesan ini untuk menandai telah dibaca.</b></span></div>`;
+            document.getElementById('notifList').insertAdjacentHTML('afterbegin', logHTML);
+        }
+    };
+
+    const NLPController = {
+        insertAndSend: function(textString) { 
+            document.getElementById('chatInput').value = textString; 
+            this.processUserInput(); 
+        },
+        
+        processUserInput: async function() {
+            const inputField = document.getElementById('chatInput'); 
+            const msg = inputField.value.trim(); 
+            if(msg === '') return;
+            
+            const chatContainer = document.getElementById('chatContainer'); 
+            const indicatorElement = document.getElementById('typingIndicator');
+            
+            const userBubble = document.createElement('div'); 
+            userBubble.className = 'chat-bubble chat-user shadow-sm'; 
+            userBubble.innerText = msg; 
+            chatContainer.insertBefore(userBubble, indicatorElement);
+            
+            const clearfix = document.createElement('div'); 
+            clearfix.style.clear = 'both'; 
+            chatContainer.insertBefore(clearfix, indicatorElement);
+            
+            inputField.value = ''; 
+            indicatorElement.style.display = 'block'; 
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            try {
+                // MENGHUBUNGI API PYTHON (GEMINI FLASH)
+                const response = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: msg })
+                });
+                
+                const data = await response.json();
+                
+                indicatorElement.style.display = 'none';
+                const botBubble = document.createElement('div');
+                botBubble.className = 'chat-bubble chat-bot shadow-sm';
+                
+                // Menerjemahkan syntax markdown bawaan Gemini (**tebal**) ke format HTML standar
+                let formattedReply = data.reply.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>').replace(/\n/g, '<br>');
+                botBubble.innerHTML = formattedReply; 
+                
+                chatContainer.insertBefore(botBubble, indicatorElement);
+                const clearfixBot = document.createElement('div'); 
+                clearfixBot.style.clear = 'both';
+                chatContainer.insertBefore(clearfixBot, indicatorElement);
+                
+            } catch (error) {
+                // JIKA PYTHON MATI ATAU ERROR
+                indicatorElement.style.display = 'none';
+                const errorBubble = document.createElement('div');
+                errorBubble.className = 'chat-bubble chat-bot shadow-sm';
+                errorBubble.innerText = "Koneksi ke TambakTech Core AI terputus. Harap periksa jaringan server Python Anda.";
+                chatContainer.insertBefore(errorBubble, indicatorElement);
+            }
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    };
+
+    window.onload = () => {
+        AppController.fetchLiveWeather();
+        IoTController.generateInitialData();
+        IoTController.initializeCharts();
+        
+        setInterval(() => {
+            IoTController.processIncomingDataTick();
+        }, 5000); 
+        
+        TimeController.startTicker();
+        
+        document.getElementById('chatInput').addEventListener('keypress', function(eventObj) {
+            if(eventObj.key === 'Enter') { NLPController.processUserInput(); }
+        });
+    };
+</script>
+</body>
+</html>
